@@ -59,3 +59,4 @@ class Bullet:
         direction_angles = {'UP': 0, 'DOWN': 180, 'LEFT': 90, 'RIGHT': -90}
         rotated_image = pygame.transform.rotate(self.image, direction_angles[self.direction])
         screen.blit(rotated_image, (self.x, self.y))
+

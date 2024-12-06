@@ -3,8 +3,8 @@ import random
 from CONST import *
 
 # в секундах
-BONUS_LIFETIME = 10
-BONUS_RESPAWN_TIME = 10
+BONUS_LIFETIME = 15
+BONUS_RESPAWN_TIME = 60
 
 
 class Bonus:

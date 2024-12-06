@@ -5,6 +5,7 @@ import Class_Field
 import Class_Bonus
 import Class_EnemyTank
 import Class_PlayerTank
+import Class_UI
 
 
 def start_position(matrix, POLE):
@@ -29,6 +30,7 @@ class GameManager:
         self.enemy_tanks = Class_EnemyTank.BotManager(field=self.field)
         self.player_tank = Class_PlayerTank.Player\
             (field=self.field, position=start_position(lev[level_number - 1], CONST.POLE_PLAYER))
+        self.info_panel = Class_UI.InfoPanel(self.screen, self.player_tank)
 
     def run(self):
         while self.running:
@@ -36,7 +38,7 @@ class GameManager:
             self.update()
             self.render()
             # self.check_game_over()
-            self.clock.tick(60)
+            self.clock.tick(30)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -53,15 +55,16 @@ class GameManager:
         self.screen.fill(CONST.BLACK)
         self.field.draw(self.screen)
         self.enemy_tanks.draw(self.screen)
-        self.player_tank.draw(self.screen)  # Отрисовка игрока
+        self.player_tank.draw(self.screen)
+        self.info_panel.draw()
         pygame.display.flip()
 
-    # def check_game_over(self):
-    #     # Логика завершения игры (например, смерть игрока или уничтожение базы)
-    #     if self.field.game_over:
-    #         self.end_game("База разрушена! Игра окончена.")
-    #     elif self.player_tank.dead > CONST.MAX_DEAD:
-    #         self.end_game("Слишком много смертей! Игра окончена.")
+    def check_game_over(self):
+        # Логика завершения игры (например, смерть игрока или уничтожение базы)
+        if self.field.game_over:
+            self.end_game("База разрушена! Игра окончена.")
+        elif self.player_tank.dead > CONST.MAX_DEAD:
+            self.end_game("Слишком много смертей! Игра окончена.")
 
     def end_game(self, message):
         print(message)
