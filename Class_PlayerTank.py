@@ -13,13 +13,16 @@ MIN_HP = 0
 MIN_LIVE = 0
 MAX_LIVE = 5
 
+DAMAGE = 100
+
 
 class Player:
-    def __init__(self, field, position, bonus, speed=2):
+    def __init__(self, field, position, speed=2):
         self.lvl = MIN_LVL_PLAYER
         self.score = MIN_SCORE_PLAYER
         self.live = MAX_LIVE
         self.hp = MAX_HP
+        self.damage = DAMAGE
         y, x = position
         self.x = x * CELL_SIZE
         self.y = y * CELL_SIZE
@@ -29,8 +32,6 @@ class Player:
         self.target_y = self.y
         self.moving = False
         self.movement_key = None
-
-        self.bonus = bonus
 
         self.speed = speed
         self.field = field
@@ -67,7 +68,7 @@ class Player:
                 offset = i * 10  # Смещение пуль (например, по 10 пикселей)
                 bullet_x = self.x + offset * dx
                 bullet_y = self.y + offset * dy
-                bullet = Class_Bullet.Bullet(bullet_x, bullet_y, self.direction)
+                bullet = Class_Bullet.Bullet(bullet_x, bullet_y, self.direction, self.damage)
                 self.bullets.append(bullet)
         # Обновляем время последнего выстрела
         self.last_shot_time = pygame.time.get_ticks()
@@ -129,18 +130,18 @@ class Player:
             return max(current - self.speed, target)
         return current
 
-    def check_bonus(self):
-        if (self.y//CELL_SIZE, self.x//CELL_SIZE) == self.bonus.position:
-            self.bonus.collect()
+    def check_bonus(self, bonus):
+        if (self.y//CELL_SIZE, self.x//CELL_SIZE) == bonus.position:
+            bonus.collect()
             self.lvl_up()
             self.hp_up()
 
-    def update(self):
+    def update(self, bonus, player, bots):
         """Обновляет состояние игрока и его пуль."""
         self.move()
-        self.check_bonus()
+        self.check_bonus(bonus)
         for bullet in self.bullets[:]:
-            bullet.update(self.field)
+            bullet.update(self.field, player, bots)
             if not bullet.active:
                 self.bullets.remove(bullet)
 

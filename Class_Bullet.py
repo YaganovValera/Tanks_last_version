@@ -4,12 +4,13 @@ SHOT_COOLDOWN = 600         # промежуток между выстрелам
 
 
 class Bullet:
-    def __init__(self, x, y, direction, speed=4):
+    def __init__(self, x, y, direction, damage=100, speed=4):
         self.x = x
         self.y = y
         self.image = IMG_BULLET
         self.direction = direction  # Направление ('UP', 'DOWN', 'LEFT', 'RIGHT')
         self.speed = speed  # Скорость пули
+        self.damage = damage  # Урон, наносимый пулей
         self.active = True  # Флаг активности (пуля летит)
 
     def move(self):
@@ -23,8 +24,8 @@ class Bullet:
         elif self.direction == 'RIGHT':
             self.x += self.speed
 
-    def check_collision(self, field):
-        """Проверяем столкновение пули с объектами на поле."""
+    def check_collision(self, field, player, bots):
+        """Проверяем столкновение пули с объектами на поле и наносим урон при попадании в игрока или бота."""
         cell_x = self.x // CELL_SIZE
         cell_y = self.y // CELL_SIZE
 
@@ -49,10 +50,23 @@ class Bullet:
         if cell_value == POLE_BETON:
             self.active = False
 
-    def update(self, field):
+        # Проверка попадания в игрока
+        if player is not None and \
+                (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.x // CELL_SIZE, player.y // CELL_SIZE):
+            player.hp -= self.damage
+            self.active = False
+
+        # Проверка попадания в ботов
+        if bots is not None:
+            for bot in bots:
+                if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot.x // CELL_SIZE, bot.y // CELL_SIZE):
+                    bot.hp -= self.damage
+                    self.active = False
+
+    def update(self, field, player, bots):
         """Обновляет состояние пули."""
         self.move()
-        self.check_collision(field)
+        self.check_collision(field, player, bots)
 
     def draw(self, screen):
         """Отрисовываем пулю."""

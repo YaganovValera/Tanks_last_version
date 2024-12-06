@@ -1,5 +1,4 @@
 from CONST import *
-import random
 
 
 class Field:

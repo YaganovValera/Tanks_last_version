@@ -80,7 +80,6 @@ def run_game():
             draw_menu(screen, font)
             pygame.display.flip()
             clock.tick(30)
-
     finally:
         pygame.quit()
         sys.exit()
