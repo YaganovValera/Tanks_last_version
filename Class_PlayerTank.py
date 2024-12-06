@@ -10,15 +10,15 @@ MIN_SCORE_PLAYER = 0
 MAX_HP = 100
 MIN_HP = 0
 
-MIN_DEAD = 0
-MAX_DEAD = 10
+MIN_LIVE = 0
+MAX_LIVE = 5
 
 
 class Player:
-    def __init__(self, field, position, speed=2):
+    def __init__(self, field, position, bonus, speed=2):
         self.lvl = MIN_LVL_PLAYER
         self.score = MIN_SCORE_PLAYER
-        self.dead = MIN_DEAD
+        self.live = MAX_LIVE
         self.hp = MAX_HP
         y, x = position
         self.x = x * CELL_SIZE
@@ -30,11 +30,26 @@ class Player:
         self.moving = False
         self.movement_key = None
 
+        self.bonus = bonus
+
         self.speed = speed
         self.field = field
         self.bullets = []
         self.last_shot_time = 0
         self.shot_cooldown = Class_Bullet.SHOT_COOLDOWN
+
+    def hp_up(self):
+        self.hp += MAX_HP/5
+
+    def hp_restart(self):
+        self.hp = MAX_HP
+
+    def lvl_up(self):
+        if self.lvl + 1 <= MAX_LVL_PLAYER:
+            self.lvl += 1
+
+    def lvl_restart(self):
+        self.lvl += MIN_LVL_PLAYER
 
     def shoot(self):
         """Стрельба игрока."""
@@ -50,10 +65,8 @@ class Player:
 
             for i in range(self.lvl):  # Количество пуль = уровень игрока
                 offset = i * 10  # Смещение пуль (например, по 10 пикселей)
-                # Вычисляем начальную позицию пули
                 bullet_x = self.x + offset * dx
                 bullet_y = self.y + offset * dy
-                # Создаём новый снаряд и добавляем его в список
                 bullet = Class_Bullet.Bullet(bullet_x, bullet_y, self.direction)
                 self.bullets.append(bullet)
         # Обновляем время последнего выстрела
@@ -95,7 +108,7 @@ class Player:
         if not (0 <= cell_x < self.field.cols and 0 <= cell_y < self.field.rows):
             return False
 
-        return self.field.level_matrix[cell_y][cell_x] in [POLE_EMPTY, POLE_PLAYER, POLE_VRAGS]
+        return self.field.level_matrix[cell_y][cell_x] not in [POLE_BETON, POLE_BASE, POLE_WATER, POLE_KIRPICH]
 
     def move(self):
         """Плавное движение игрока к целевой позиции."""
@@ -116,9 +129,16 @@ class Player:
             return max(current - self.speed, target)
         return current
 
+    def check_bonus(self):
+        if (self.y//CELL_SIZE, self.x//CELL_SIZE) == self.bonus.position:
+            self.bonus.collect()
+            self.lvl_up()
+            self.hp_up()
+
     def update(self):
         """Обновляет состояние игрока и его пуль."""
         self.move()
+        self.check_bonus()
         for bullet in self.bullets[:]:
             bullet.update(self.field)
             if not bullet.active:

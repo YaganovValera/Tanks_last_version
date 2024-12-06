@@ -1,15 +1,17 @@
 from CONST import *
+import random
 
 
 class Field:
     def __init__(self, level_map):
         """
-            Конструктор игрового поля.
-            :param level_map: карта для уровня.
+        Конструктор игрового поля.
+        :param level_map: карта для уровня.
         """
         self.level_matrix = level_map
         self.rows = len(level_map)
         self.cols = len(level_map[0])
+        self.game_over = False
 
         # Словарь текстур
         self.textures = {
@@ -22,6 +24,10 @@ class Field:
         }
 
     def draw(self, screen):
+        """
+        Отображает поле на экране.
+        :param screen: Экран для отрисовки.
+        """
         for row in range(self.rows):
             for col in range(self.cols):
                 cell_value = self.level_matrix[row][col]
@@ -31,4 +37,3 @@ class Field:
                 texture = self.textures.get(cell_value)
                 if texture:
                     screen.blit(texture, (x, y))
-

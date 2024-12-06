@@ -29,7 +29,7 @@ class GameManager:
         self.bonus = Class_Bonus.Bonus(field=self.field)
         self.enemy_tanks = Class_EnemyTank.BotManager(field=self.field)
         self.player_tank = Class_PlayerTank.Player\
-            (field=self.field, position=start_position(lev[level_number - 1], CONST.POLE_PLAYER))
+            (field=self.field, position=start_position(lev[level_number - 1], CONST.POLE_PLAYER), bonus=self.bonus)
         self.info_panel = Class_UI.InfoPanel(self.screen, self.player_tank)
 
     def run(self):
@@ -37,7 +37,7 @@ class GameManager:
             self.handle_events()
             self.update()
             self.render()
-            # self.check_game_over()
+            self.check_game_over()
             self.clock.tick(30)
 
     def handle_events(self):
@@ -47,9 +47,9 @@ class GameManager:
             self.player_tank.handle_keys(event)             # Обработка ввода игрока
 
     def update(self):
-        self.bonus.update()
         self.enemy_tanks.update()
         self.player_tank.update()  # Обновление игрока
+        self.bonus.update()
 
     def render(self):
         self.screen.fill(CONST.BLACK)
@@ -60,12 +60,35 @@ class GameManager:
         pygame.display.flip()
 
     def check_game_over(self):
-        # Логика завершения игры (например, смерть игрока или уничтожение базы)
+        # Логика завершения игры
         if self.field.game_over:
             self.end_game("База разрушена! Игра окончена.")
-        elif self.player_tank.dead > CONST.MAX_DEAD:
-            self.end_game("Слишком много смертей! Игра окончена.")
+        elif self.player_tank.live == 0:
+            self.end_game("Вы потратили все жизни! Игра окончена.")
 
     def end_game(self, message):
-        print(message)
+        font = pygame.font.Font(None, 50)
+        text_surface = font.render(message, True, (78, 255, 33))
+        text_rect = text_surface.get_rect(center=(CONST.WIDTH // 2, CONST.HEIGHT // 2))
+
+        self.screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+
         self.running = False
+
+        start_time = pygame.time.get_ticks()
+
+        # Основной цикл, который будет работать до тех пор, пока не пройдет 5 секунд
+        while True:
+            current_time = pygame.time.get_ticks()
+
+            # Проверяем, прошло ли 5 секунд
+            if current_time - start_time >= 15000:
+                return
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # Если пользователь закрыл окно
+                    return
+
+            pygame.time.Clock().tick(30)
+

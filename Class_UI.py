@@ -23,8 +23,8 @@ class InfoPanel:
         info_texts = [
             f"Уровень: {self.player.lvl}",
             f"Счет: {self.player.score}",
-            f"Смерти: {self.player.dead}",
-            f"HP: {self.player.hp}",
+            f"Жизней: {self.player.live}",
+            f"HP танка: {self.player.hp}",
         ]
 
         # Отрисовка текста

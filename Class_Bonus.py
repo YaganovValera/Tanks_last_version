@@ -3,8 +3,8 @@ import random
 from CONST import *
 
 # в секундах
-BONUS_LIFETIME = 15
-BONUS_RESPAWN_TIME = 60
+BONUS_LIFETIME = 30
+BONUS_RESPAWN_TIME = 5
 
 
 class Bonus:
@@ -34,7 +34,6 @@ class Bonus:
             self.field.level_matrix[self.position[0]][self.position[1]] = POLE_BONUS
             self.spawn_time = pygame.time.get_ticks()
             self.active = True
-            print(f"Бонус появился на позиции {self.position}")
 
     def update(self):
         """
@@ -58,7 +57,6 @@ class Bonus:
         """
         if self.position:
             self.field.level_matrix[self.position[0]][self.position[1]] = 0
-            print(f"Бонус исчез с позиции {self.position}")
         self.position = None
         self.spawn_time = pygame.time.get_ticks()
         self.active = False
@@ -67,5 +65,4 @@ class Bonus:
         """
         Сбор бонуса. Вызывается, когда игрок попадает на клетку с бонусом.
         """
-        print(f"Бонус собран на позиции {self.position}")
         self.remove()
