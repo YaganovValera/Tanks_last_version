@@ -52,7 +52,10 @@ class Bullet:
 
         # Проверка попадания в игрока или в пулю игрока
         if player is not None:
-            if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.x // CELL_SIZE, player.y // CELL_SIZE):
+            if (
+                    (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.x // CELL_SIZE, player.y // CELL_SIZE) or
+                    (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.target_x // CELL_SIZE, player.target_y // CELL_SIZE)
+            ):
                 player.hp -= self.damage
                 self.active = False
             for player_bullet in player.bullets:
@@ -63,7 +66,9 @@ class Bullet:
         # Проверка попадания в ботов или их пулю
         if bots is not None:
             for bot in bots:
-                if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot.x // CELL_SIZE, bot.y // CELL_SIZE):
+                if (
+                        (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot.x // CELL_SIZE, bot.y // CELL_SIZE) or
+                        (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot.target_x // CELL_SIZE, bot.target_y // CELL_SIZE)):
                     bot.hp -= self.damage
                     self.active = False
 

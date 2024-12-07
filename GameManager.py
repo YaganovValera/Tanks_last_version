@@ -60,7 +60,7 @@ class GameManager:
             self.end_game("База разрушена! Игра окончена.")
         elif self.player_tank.live == self.player_tank.get_MIN_live():
             self.end_game("Вы потратили все жизни! Игра окончена.")
-        elif self.player_tank.score > self.player_tank.get_MAX_score():
+        elif self.player_tank.score >= self.player_tank.get_MAX_score():
             self.end_game("Победа!")
 
     def end_game(self, message):
