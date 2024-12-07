@@ -34,7 +34,7 @@ def draw_menu(screen, font):
 
 
 def run_game():
-    try:
+    # try:
         global selected_option
         global level_number
 
@@ -64,11 +64,11 @@ def run_game():
                         selected_option = (selected_option + 1) % len(MENU_OPTIONS)  # Перемещение вниз
                     elif event.key == pygame.K_RETURN:
                         if selected_option == OPTION_NEW_GAME:
-                            try:
-                                game = GameManager.GameManager(level_number)
-                                game.run()
-                            except Exception as e:
-                                print(f"Ошибка при запуске игры: {e}")
+                            # try:
+                            game = GameManager.GameManager(level_number)
+                            game.run()
+                            # except Exception as e:
+                            #     print(f"Ошибка при запуске игры: {e}")
                         elif selected_option == OPTION_EXIST:
                             running = False
                     if selected_option == OPTION_LEVEL:
@@ -80,7 +80,7 @@ def run_game():
             draw_menu(screen, font)
             pygame.display.flip()
             clock.tick(30)
-    finally:
+    # finally:
         pygame.quit()
         sys.exit()
 

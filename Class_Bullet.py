@@ -50,18 +50,28 @@ class Bullet:
         if cell_value == POLE_BETON:
             self.active = False
 
-        # Проверка попадания в игрока
-        if player is not None and \
-                (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.x // CELL_SIZE, player.y // CELL_SIZE):
-            player.hp -= self.damage
-            self.active = False
+        # Проверка попадания в игрока или в пулю игрока
+        if player is not None:
+            if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player.x // CELL_SIZE, player.y // CELL_SIZE):
+                player.hp -= self.damage
+                self.active = False
+            for player_bullet in player.bullets:
+                if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (player_bullet.x // CELL_SIZE, player_bullet.y // CELL_SIZE):
+                    self.active = False
+                    player_bullet.active = False
 
-        # Проверка попадания в ботов
+        # Проверка попадания в ботов или их пулю
         if bots is not None:
             for bot in bots:
                 if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot.x // CELL_SIZE, bot.y // CELL_SIZE):
                     bot.hp -= self.damage
                     self.active = False
+
+            for bot in bots:
+                for bot_bullet in bot.bullets:
+                    if (self.x // CELL_SIZE, self.y // CELL_SIZE) == (bot_bullet.x // CELL_SIZE, bot_bullet.y // CELL_SIZE):
+                        self.active = False
+                        bot_bullet.active = False
 
     def update(self, field, player, bots):
         """Обновляет состояние пули."""

@@ -1,12 +1,11 @@
 import random
-import pygame
 import Class_Bullet
 from CONST import *
 
 TANK_STATS = {
-    'ТТ': {'hp': 500, 'damage': 30, 'speed': 1},
-    'СТ': {'hp': 300, 'damage': 15, 'speed': 1.5},
-    'ЛТ': {'hp': 200, 'damage': 5, 'speed': 2}
+    'ТТ': {'hp': 300, 'damage': 30, 'speed': 1, 'get_score': 200},
+    'СТ': {'hp': 150, 'damage': 15, 'speed': 1.25, 'get_score': 100},
+    'ЛТ': {'hp': 100, 'damage': 5, 'speed': 1.5, 'get_score': 50}
 }
 
 TANK_IMAGES = {
@@ -31,12 +30,14 @@ class TankEnemy:
         self.speed = TANK_STATS[tank_type]['speed']
         self.hp = TANK_STATS[tank_type]['hp']
         self.damage = TANK_STATS[tank_type]['damage']
+        self.get_score = TANK_STATS[tank_type]['get_score']
         self.bullets = []
         self.shoot_interval = shoot_interval  # Интервал между выстрелами (в миллисекундах)
         self.last_shot_time = pygame.time.get_ticks()  # Время последнего выстрела
+        self.recent_positions = []
 
-    def move_towards_base(self):
-        """Двигается к базе игрока, избегая бетонных стен."""
+    def move_towards_base(self, player_tank):
+        """Двигается к базе игрока, избегая препятствий."""
         if self.moving:
             return
 
@@ -44,30 +45,6 @@ class TankEnemy:
 
         row, col = self.row, self.col
         target_row, target_col = self.base_position
-
-        # Проверяем клетку перед танком
-        direction_offsets = {
-            'UP': (-1, 0),
-            'DOWN': (1, 0),
-            'LEFT': (0, -1),
-            'RIGHT': (0, 1)
-        }
-        if self.direction in direction_offsets:
-            offset_row, offset_col = direction_offsets[self.direction]
-            forward_row, forward_col = row + offset_row, col + offset_col
-
-            if 0 <= forward_row < self.field.rows and 0 <= forward_col < self.field.cols:
-                forward_cell = self.field.level_matrix[forward_row][forward_col]
-
-                if forward_cell == POLE_BASE:
-                    # Если перед танком база, останавливаемся и стреляем
-                    self.moving = False
-                    self.shoot()
-                    return
-                elif forward_cell == POLE_KIRPICH:
-                    # Если перед танком кирпич, стреляем в него
-                    self.shoot()
-                    return
 
         # Возможные движения: вниз, вверх, вправо, влево
         possible_moves = [
@@ -77,38 +54,61 @@ class TankEnemy:
             (row, col - 1, 'LEFT')
         ]
 
-        # Исключаем возврат на предыдущую позицию
+        # Исключаем возврат на недавно посещенные позиции
         valid_moves = [
             (new_row, new_col, direction)
             for new_row, new_col, direction in possible_moves
-            if self.can_move(new_row, new_col)
+            if (new_row, new_col) not in self.recent_positions
         ]
 
+        # Если есть валидные ходы, обработать их
         if valid_moves:
-            # Сортируем движения по расстоянию до цели (базы)
-            valid_moves.sort(key=lambda move: abs(move[0] - target_row) + abs(move[1] - target_col))
+            # Сортируем по расстоянию до базы и типу клетки
+            valid_moves.sort(key=lambda move: (
+                abs(move[0] - target_row) + abs(move[1] - target_col),  # Первичный критерий: расстояние до базы
+                self.field.level_matrix[move[0]][move[1]]               # Вторичный критерий: избегать кирпича
+            ))
 
-            # Берем наилучший ход
-            new_row, new_col, new_direction = valid_moves[0]
+            for new_row, new_col, new_direction in valid_moves:
+                cell_value = self.field.level_matrix[new_row][new_col]
 
-            # Устанавливаем направление танка
-            self.direction = new_direction
+                if cell_value == POLE_BASE:
+                    # Если перед нами база, стреляем и останавливаемся
+                    self.direction = new_direction
+                    self.shoot()
+                    self.moving = False
+                    return
 
-            # Обновляем цель движения
-            self.target_x, self.target_y = new_col * CELL_SIZE, new_row * CELL_SIZE
-            self.row, self.col = new_row, new_col
-            self.moving = True
-        else:
-            # Если движение невозможно, остаемся на месте
-            self.moving = False
+                if self.can_move(new_row, new_col, player_tank):  # Если можно двигаться
+                    self.direction = new_direction
+                    if cell_value == POLE_KIRPICH and not self.shoot():
+                        return
 
-    def can_move(self, row, col):
+                    # Обновляем позицию и добавляем в список недавних
+                    self.target_x, self.target_y = new_col * CELL_SIZE, new_row * CELL_SIZE
+                    self.row, self.col = new_row, new_col
+                    self.moving = True
+                    self.update_recent_positions(row, col)
+                    return
+
+        # Если невозможно двигаться, остаемся на месте
+        self.moving = False
+
+    def update_recent_positions(self, row, col):
+        """Обновляет список недавно посещенных позиций."""
+        self.recent_positions.append((row, col))
+        if len(self.recent_positions) > 3:  # Храним только последние 3 позиции
+            self.recent_positions.pop(0)
+
+    def can_move(self, row, col, player):
         """Проверка, можно ли двигаться на указанную клетку."""
         # Преобразуем row и col в целые числа
         row, col = int(row), int(col)
         if 0 <= row < self.field.rows and 0 <= col < self.field.cols:
             cell_value = self.field.level_matrix[row][col]
-            if cell_value not in [POLE_BETON, POLE_WATER, POLE_KIRPICH, POLE_BASE]:
+            if (row, col) == (player.target_y//CELL_SIZE, player.target_x//CELL_SIZE):
+                return False
+            if cell_value not in [POLE_BETON, POLE_WATER]:
                 return True
         return False
 
@@ -137,7 +137,7 @@ class TankEnemy:
     def shoot(self):
         """Танк стреляет одной пулей с заданным интервалом."""
         if pygame.time.get_ticks() - self.last_shot_time < self.shoot_interval:
-            return
+            return False
 
         # Стреляем
         directions = {
@@ -156,12 +156,13 @@ class TankEnemy:
             self.bullets.append(bullet)
 
         self.last_shot_time = pygame.time.get_ticks()
+        return True
 
     def update(self, player_tank):
         """Обновление состояния танка."""
         self.move()
         if not self.moving:
-            self.move_towards_base()
+            self.move_towards_base(player_tank)
 
         # Приведение координат пуль к целым числам
         for bullet in self.bullets[:]:
@@ -209,6 +210,22 @@ class BotManager:
     def update(self, player_tank):
         for bot in self.enemies:
             bot.update(player_tank)
+
+            # Проверка на смерть бота и спавн нового
+            if bot.hp <= 0:
+                player_tank.score += bot.get_score
+                # Убираем мертвого бота
+                self.enemies.remove(bot)
+
+                # Случайный выбор новой позиции для спавна и нового типа танка
+                spawn_position = random.choice([
+                    (row, col) for row in range(self.field.rows)
+                    for col in range(self.field.cols)
+                    if self.field.level_matrix[row][col] == POLE_VRAGS
+                ])
+                new_tank_type = random.choice(['ТТ', 'СТ', 'ЛТ'])
+                new_bot = TankEnemy(new_tank_type, spawn_position[0], spawn_position[1], self.base_position, self.field)
+                self.enemies.append(new_bot)
 
     def draw(self, screen):
         for bot in self.enemies:

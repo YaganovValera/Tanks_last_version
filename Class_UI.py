@@ -21,10 +21,10 @@ class InfoPanel:
 
         # Текстовая информация
         info_texts = [
-            f"Уровень: {self.player.lvl}",
-            f"Счет: {self.player.score}",
-            f"Жизней: {self.player.live}",
-            f"HP танка: {self.player.hp}",
+            f"Уровень: {int(self.player.lvl)}",
+            f"Счет: {int(self.player.score)}",
+            f"Жизней: {int(self.player.live)}",
+            f"HP танка: {int(self.player.hp)}",
         ]
 
         # Отрисовка текста

@@ -1,4 +1,6 @@
 import copy
+import time
+
 import CONST
 import pygame
 from Levels import lev
@@ -7,14 +9,6 @@ import Class_Bonus
 import Class_EnemyTank
 import Class_PlayerTank
 import Class_UI
-
-
-def start_position(matrix, POLE):
-    """Находит стартовую позицию игрока на поле."""
-    for row in range(len(matrix)):
-        for column in range(len(matrix[row])):
-            if matrix[row][column] == POLE:
-                return (row, column)
 
 
 class GameManager:
@@ -30,8 +24,7 @@ class GameManager:
         self.field = Class_Field.Field(map_lvl)
         self.bonus = Class_Bonus.Bonus(field=self.field)
         self.enemy_tanks = Class_EnemyTank.BotManager(field=self.field)
-        self.player_tank = Class_PlayerTank.Player\
-            (field=self.field, position=start_position(map_lvl, CONST.POLE_PLAYER))
+        self.player_tank = Class_PlayerTank.Player(field=self.field)
         self.info_panel = Class_UI.InfoPanel(self.screen, self.player_tank)
 
     def run(self):
@@ -46,7 +39,7 @@ class GameManager:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            self.player_tank.handle_keys(event)             # Обработка ввода игрока
+            self.player_tank.handle_keys(event, self.enemy_tanks.enemies)             # Обработка ввода игрока
 
     def update(self):
         self.player_tank.update(self.bonus, None, self.enemy_tanks.enemies)  # Обновление игрока
@@ -65,12 +58,14 @@ class GameManager:
         # Логика завершения игры
         if self.field.game_over:
             self.end_game("База разрушена! Игра окончена.")
-        elif self.player_tank.live == 0:
+        elif self.player_tank.live == self.player_tank.get_MIN_live():
             self.end_game("Вы потратили все жизни! Игра окончена.")
+        elif self.player_tank.score > self.player_tank.get_MAX_score():
+            self.end_game("Победа!")
 
     def end_game(self, message):
         font = pygame.font.Font(None, 50)
-        text_surface = font.render(message, True, (78, 255, 33))
+        text_surface = font.render(message, True, (255, 0, 0))
         text_rect = text_surface.get_rect(center=(CONST.WIDTH // 2, CONST.HEIGHT // 2))
         self.screen.blit(text_surface, text_rect)
         pygame.display.flip()
@@ -80,8 +75,9 @@ class GameManager:
         # Основной цикл, который будет работать до тех пор, пока не пройдет 5 секунд
         while True:
             current_time = pygame.time.get_ticks()
+
             # Проверяем, прошло ли 5 секунд
-            if current_time - start_time >= 15000:
+            if current_time - start_time >= 5000:
                 return
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Если пользователь закрыл окно
