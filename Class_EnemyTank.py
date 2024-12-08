@@ -118,12 +118,10 @@ class TankEnemy:
             self.x = self.approach(self.x, self.target_x)
             self.y = self.approach(self.y, self.target_y)
 
-            # Приведение координат к целым числам
-            self.x = int(self.x)
-            self.y = int(self.y)
-
             # Проверяем, достиг ли танк целевой позиции
-            if self.x == self.target_x and self.y == self.target_y:
+            if self.x == float(self.target_x) and self.y == float(self.target_y):
+                self.x = int(self.x)
+                self.y = int(self.y)
                 self.moving = False
 
     def approach(self, current, target):

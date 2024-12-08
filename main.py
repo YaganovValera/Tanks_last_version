@@ -65,8 +65,8 @@ def run_game():
                     elif event.key == pygame.K_RETURN:
                         if selected_option == OPTION_NEW_GAME:
                             try:
-                            game = GameManager.GameManager(level_number)
-                            game.run()
+                                game = GameManager.GameManager(level_number)
+                                game.run()
                             except Exception as e:
                                 print(f"Ошибка при запуске игры: {e}")
                         elif selected_option == OPTION_EXIST:
